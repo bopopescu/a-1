@@ -218,7 +218,7 @@ def ga_options(parser=None):
     _add_if_new(parser, "--initial-population", dest="initial_population", help="Path to file from which genes of initial population are read", default=None)
     return parser
 
-def is_mpi_slave(options):
+def is_mpi_subordinate(options):
     if options.MPI:
         from mpi4py import MPI
         return MPI.COMM_WORLD.Get_rank() != 0
@@ -257,18 +257,18 @@ def run_GA(model, options=None):
     if options.MPI:
         from sg.utils.pyevolve_mpi import SimpleMPIGA
         ga = SimpleMPIGA(model, genome, seed=options.seed)
-        if not is_mpi_slave(options):
+        if not is_mpi_subordinate(options):
             print "MPI-distributed evolution with %d hosts." % ga.nhosts
             _print_mpi_info()
     else:
         ga = pu.SimpleGAWithFixedElitism(genome, seed=options.seed)
-    if not is_mpi_slave(options):
+    if not is_mpi_subordinate(options):
         _print_mkl_info()
     ga.setGenerations(options.generations)
     _step_callbacks.append(make_dataset_stepper(model))
     ga.stepCallback.set(step_generation)
     # Number of generations and dataset stepper must be set before starting eval_loop
-    if is_mpi_slave(options):
+    if is_mpi_subordinate(options):
         ga.eval_loop()
         return
     if options.initial_population is None:

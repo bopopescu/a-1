@@ -137,19 +137,19 @@ def mpi_test_fitness_variation(genomes=[[1344, 82, 68], [2016, 174, 104]],
     '''
     from mpi4py import MPI
     mpi_comm = MPI.COMM_WORLD
-    is_master = mpi_comm.Get_rank() == 0
+    is_main = mpi_comm.Get_rank() == 0
     mpi_size = mpi_comm.Get_size()
     
-    if is_master:
+    if is_main:
         print 'Reseeding all hosts with different seeds'
     reseed(mpi_comm.scatter(np.random.random_integers(2**32-1, size=mpi_size)))
         
     evaluations -= evaluations % mpi_size
-    if is_master:
+    if is_main:
         print 'Setting number of evaluations to closest smaller multiple of hosts:', evaluations
 
     errors = mpi_comm.gather(test_fitness_variation(genomes, evaluations/mpi_size, trials))
-    if is_master:
+    if is_main:
         return np.concatenate(errors, axis=1)
 
 def mpi_test_save(path,
@@ -160,7 +160,7 @@ def mpi_test_save(path,
     errors = mpi_test_fitness_variation(genomes, evaluations, trials)
     if MPI.COMM_WORLD.Get_rank() == 0:
         np.save(path, errors)
-        print 'Master saved errors to', path
+        print 'Main saved errors to', path
 
 def load_and_plot_fitness_variations(path):
     import matplotlib.pyplot as plt

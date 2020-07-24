@@ -35,7 +35,7 @@ import sg.data.gefcom2012 as gef12
 import sg.data.gefcom2014 as gef14
 import pattern_eliminators
 from model import Model
-from ga import run_GA, ga_options, is_mpi_slave, process_data
+from ga import run_GA, ga_options, is_mpi_subordinate, process_data
 import esn
 import sg.utils.pyevolve_utils as pu
 import load_cleansing
@@ -575,10 +575,10 @@ def plot_test_prediction(target, predictions,
 def _run_models(models, dataset):
     data_desc = dataset.desc
     for model in models:
-        if not is_mpi_slave(options):
+        if not is_mpi_subordinate(options):
             print "Optimizing parameters for model", model.name, "."
         run_GA(model, options)
-        if is_mpi_slave(options):
+        if is_mpi_subordinate(options):
             continue
         raw_genes = pu.raw_genes(model.genome, strip=True)
         print "Best genes found during evolution: ", raw_genes
@@ -610,7 +610,7 @@ def run(model_creator_class):
     """Main entry point for specific models. model_creator is an instance of a
     class used to set up the model and the data."""
     get_options()
-    if not is_mpi_slave(options):
+    if not is_mpi_subordinate(options):
         timer = SimpleTimer()
     prev_handler = np.seterrcall(float_err_handler)
     prev_err = np.seterr(all='call')
@@ -619,7 +619,7 @@ def run(model_creator_class):
     np.random.seed(options.seed)
     model_creator = model_creator_class(options)
     model = model_creator.get_model()
-    if not is_mpi_slave(options):
+    if not is_mpi_subordinate(options):
         _print_sim_context(model.dataset)
     _run_models([model], model.dataset)
     ul.tempfeeder_exp().close()

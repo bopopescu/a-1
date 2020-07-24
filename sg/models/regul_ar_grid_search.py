@@ -349,13 +349,13 @@ def _cmdline_mpi_grid_search():
     import argparse
     args, lp_options = parse_args()
     if args.no_mpi:
-        is_master = True
+        is_main = True
         using_mpi = False
     else:
         from mpi4py import MPI
-        is_master = MPI.COMM_WORLD.Get_rank() == 0
+        is_main = MPI.COMM_WORLD.Get_rank() == 0
         using_mpi = MPI.COMM_WORLD.Get_size() > 1
-    if is_master:
+    if is_main:
         print 'Launched with dataset {}, saving results to {}.losses/.forecasts[.npy].'\
             .format(args.dataset, args.save_path)
     if args.vanilla:
